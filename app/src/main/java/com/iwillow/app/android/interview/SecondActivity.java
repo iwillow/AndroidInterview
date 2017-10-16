@@ -1,6 +1,9 @@
 package com.iwillow.app.android.interview;
 
+import android.content.ComponentName;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
+import android.os.IBinder;
 import android.os.PersistableBundle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -8,6 +11,8 @@ import android.util.Log;
 
 public class SecondActivity extends AppCompatActivity {
     private static final String TAG = SecondActivity.class.getSimpleName();
+    private IRemoteService mIRemoteService;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,6 +70,20 @@ public class SecondActivity extends AppCompatActivity {
         showSize("onDestroy");
     }
 
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            mIRemoteService = IRemoteService.Stub.asInterface(service);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.d(TAG, "Service has unexpectedly disconnected");
+            mIRemoteService = null;
+        }
+    };
+
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -94,5 +113,6 @@ public class SecondActivity extends AppCompatActivity {
         //  int h = findViewById(R.id.tv_hello).getHeight();
         // Log.d(TAG, tag + " Width:" + w + ";h:" + h);
     }
+
 
 }
