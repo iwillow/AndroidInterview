@@ -31,5 +31,133 @@ service是一个可以在后台执行长时间运行操作而不提供用户界�
 ## ANR
 在android中Activity的最长执行时间是5秒，BroadcastReceiver的最长执行时间则是10秒没有执行完毕，采用 Systrace 和 Traceview性能工具来检测。
 
+## 绑定服务客户单与服务端的通信方式
+
+### 扩展 Binder 类（同一个进程）
+
+如果您的服务仅供本地应用使用，不需要跨进程工作，则可以实现自有 Binder 类，让您的客户端通过该类直接访问服务中的公共方法。
+>注：此方法只有在客户端和服务位于同一应用和进程内这一最常见的情况下方才有效。 例如，对于需要将 Activity 绑定到在后台播放音乐的自有服务的音乐应用，此方法非常有效。
+1. 在您的服务中，创建一个可满足下列任一要求的 Binder 实例：
+   * 包含客户端可调用的公共方法
+   * 返回当前 Service 实例，其中包含客户端可调用的公共方法
+   * 或返回由服务承载的其他类的实例，其中包含客户端可调用的公共方法
+2. 从 `onBind()` 回调方法返回此 `Binder` 实例。
+3. 在客户端中，从 `onServiceConnected()` 回调方法接收 `Binder`，并使用提供的方法调用绑定服务。  
+>注: 之所以要求服务和客户端必须在同一应用内，是为了便于客户端转换返回的对象和正确调用其 API。服务和客户端还必须在同一进程内，因为此方法不执行任何跨进程编组。
+
+例如，以下这个服务可让客户端通过 Binder 实现访问服务中的方法：
+
+```
+public class LocalService extends Service {
+    // Binder given to clients
+    private final IBinder mBinder = new LocalBinder();
+    // Random number generator
+    private final Random mGenerator = new Random();
+
+    /**
+     * Class used for the client Binder.  Because we know this service always
+     * runs in the same process as its clients, we don't need to deal with IPC.
+     */
+    public class LocalBinder extends Binder {
+        LocalService getService() {
+            // Return this instance of LocalService so clients can call public methods
+            return LocalService.this;
+        }
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+
+    /** method for clients */
+    public int getRandomNumber() {
+      return mGenerator.nextInt(100);
+    }
+}
+```
+`LocalBinder` 为客户端提供 `getService()` 方法，以检索 `LocalService` 的当前实例。这样，客户端便可调用服务中的公共方法。 例如，客户端可调用服务中的 `getRandomNumber()`。
+
+点击按钮时，以下这个 `Activity` 会绑定到 `LocalService` 并调用 `getRandomNumber()` ：
+```
+public class BindingActivity extends Activity {
+    LocalService mService;
+    boolean mBound = false;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        // Bind to LocalService
+        Intent intent = new Intent(this, LocalService.class);
+        bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        // Unbind from the service
+        if (mBound) {
+            unbindService(mConnection);
+            mBound = false;
+        }
+    }
+
+    /** Called when a button is clicked (the button in the layout file attaches to
+      * this method with the android:onClick attribute) */
+    public void onButtonClick(View v) {
+        if (mBound) {
+            // Call a method from the LocalService.
+            // However, if this call were something that might hang, then this request should
+            // occur in a separate thread to avoid slowing down the activity performance.
+            int num = mService.getRandomNumber();
+            Toast.makeText(this, "number: " + num, Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /** Defines callbacks for service binding, passed to bindService() */
+    private ServiceConnection mConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                IBinder service) {
+            // We've bound to LocalService, cast the IBinder and get LocalService instance
+            LocalBinder binder = (LocalBinder) service;
+            mService = binder.getService();
+            mBound = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+    };
+}
+```
+
+
+### 使用 Messenger（不同的进程）
+
+
+
+### 使用 AIDL（不同的进程）
+
+
+
+
+## 管理绑定服务的生命周期
+
+当服务与所有客户端之间的绑定全部取消时，`Android` 系统便会销毁服务（除非还使用 `onStartCommand()` 启动了该服务）。因此，如果您的服务是纯粹的绑定服务，则无需对其生命周期进行管理 — Android 系统会根据它是否绑定到任何客户端代您管理。
+
+不过，如果您选择实现 `onStartCommand()` 回调方法，则您必须显式停止服务，因为系统现在已将服务视为已启动。在此情况下，服务将一直运行到其通过 `stopSelf()` 自行停止，或其他组件调用 `stopService()` 为止，无论其是否绑定到任何客户端。
+
+此外，如果您的服务已启动并接受绑定，则当系统调用您的 `onUnbind()` 方法时，如果您想在客户端下一次绑定到服务时接收 `onRebind()` 调用，则可选择返回 true。`onRebind()` 返回空值，但客户端仍在其 `onServiceConnected()` 回调中接收 `IBinder`。下文图 1 说明了这种生命周期的逻辑
+
+![允许绑定的已启动服务的生命周期](https://developer.android.google.cn/images/fundamentals/service_binding_tree_lifecycle.png)
 
 
