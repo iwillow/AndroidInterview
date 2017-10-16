@@ -48,3 +48,37 @@ MainActivityA#onPause->MainActivityB#onCreate->MainActivityB#onStart->MainActivi
 `FLAG_ACTIVITY_CLEAR_TOP`会将同一个任务栈中所有位于它上面的activity出栈，如果被启动的activity的启动模式是singleTask，被启动的activity如果存在只是调用onNewIntent,如果不存在，创建新的activity，如果被启动的activity是standard模式
 那么它连同之上的activity都要出栈，然后创建新的activity放入栈顶。
 `FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS`具有这个标记的Activity不会出现在历史Activity列表中，当某些情况下我们不希望用户通过历史列表回到我们的Activity的时候这个标记比较有用，它等同于属性设置`android:excludeFromRecents="true"`。
+
+
+## IntentFilter
+IntentFilter 主要用于隐式调用android系统组件如Activity、Service、BroadcastReceiver做过滤Intent使用,可以有多个IntentFilter，每一个可以有多个IntentFilter可以有多个
+action、category、data.一个过滤列表中的action、category、data可以有多个，所有的action、category、data分别构成不同类别，同一类别的信息共同约束当前类别的匹配过程。只有一个Intent同时匹配action类别、category类别和data类别才算完全匹配，只有完全匹配才能成功启动目标Activity。此外，一个Activity中可以有多个intent-filter，一个Intent只要能匹配任何一组intent-filter即可成功启动对应的Activity。
+```
+<activity android:name=".ShareActivity">
+
+<intent-filter>
+    <action android:name="com.iwillow.app.action.actionA" />
+    <action android:name="com.iwillow.app.action.actionB" />
+
+    <category android:name="com.iwillow.app.category.categoryA" />
+    <category android:name="com.iwillow.app.category.categoryB" />
+    <category android:name="android.intent.category.DEFAULT" />
+
+    <data android:mimeType="text/plain" />
+</intent-filter>
+
+<intent-filter>
+    <action android:name="com.iwillow.app.action.actionA" />
+    <action android:name="com.iwillow.app.action.actionB" />
+
+    <category android:name="com.iwillow.app.category.categoryA" />
+    <category android:name="com.iwillow.app.category.categoryB" />
+    <category android:name="android.intent.category.DEFAULT" />
+
+    <data android:mimeType="image/*" />
+	<data android:mimeType="video/*" />
+</intent-filter>
+
+</activity>
+```
+IntentFilter中的过滤信息有action、category、data，为了匹配过滤列表，需要同时匹配过滤列表中的action、category、data信息，否则匹配失败。
