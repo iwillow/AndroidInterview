@@ -1,6 +1,6 @@
 # Activity
 
-[参考](http://javayhu.me/blog/2015/11/30/art-of-android-development-reading-notes-1/)
+[更全面的总结参考](http://javayhu.me/blog/2015/11/30/art-of-android-development-reading-notes-1/)
 
 ## 启动周期
 
