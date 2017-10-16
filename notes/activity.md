@@ -1,5 +1,7 @@
 # Activity
 
+[参考](http://javayhu.me/blog/2015/11/30/art-of-android-development-reading-notes-1/)
+
 ## 启动周期
 
 初次：oncreate->onStart->onResume(可见)。
@@ -81,4 +83,59 @@ action、category、data.一个过滤列表中的action、category、data可以�
 
 </activity>
 ```
-IntentFilter中的过滤信息有action、category、data，为了匹配过滤列表，需要同时匹配过滤列表中的action、category、data信息，否则匹配失败。
+### action匹配规则
+只要Intent中的action能够和过滤规则中的任何一个action相同即可匹配成功，action的匹配区分大小写。
+
+### category匹配规则
+Intent中如果有category那么所有的category都必须和过滤规则中的其中一个category相同，如果没有category的话那么就是默认的category，即android.intent.category.DEFAULT，所以为了Activity能够接收隐式调用，配置多个category的时候必须加上默认的category。
+### data匹配规则
+与action的匹配规则类似，如果过滤规则中定义了data，那么Intent中必须也要定义可匹配的data.data的格式如下：
+```
+<data android:scheme="string"
+  android:host="string"
+  android:port="string"
+  android:path="string"
+  android:pathPattern="string"
+  android:pathPrefix="string"
+  android:mimeType="string" />
+```
+
+主要由mimeType和URI组成，其中mimeType代表媒体类型，而URI的结构也复杂，大致如下：
+<scheme>://<host>:<port>/[<path>]|[<pathPrefix>]|[pathPattern] 例如content://com.example.project:200/folder/subfolder/etc scheme、host、port分别表示URI的模式、主机名和端口号，其中如果scheme或者host未指定那么URI就无效。 path、pathPattern、pathPrefix都是表示路径信息，其中path表示完整的路径信息，pathPrefix表示路径的前缀信息；pathPattern表示完整的路径，但是它里面包含了通配符(*)。
+
+data匹配规则：Intent中必须含有data数据，并且data数据能够完全匹配过滤规则中的某一个data。
+URI有默认的scheme！
+
+如果过滤规则中的`mimeType`指定`为image/*`或者`text/*`等这种类型的话，那么即使过滤规则中没有指定URI，URI有默认的scheme是`content`和`file`！如果过滤规则中指定了scheme的话那就不是默认的scheme了。
+```
+//URI有默认值
+<intent-filter>
+    <data android:mimeType="image/*"/>
+    ...
+</intent-filter>
+//URI默认值被覆盖
+<intent-filter>
+    <data android:mimeType="image/*" android:scheme="http" .../>
+    ...
+</intent-filter>
+```
+如果要为Intent指定完整的data，必须要调用setDataAndType方法！不能先调用setData然后调用setType，因为这两个方法会彼此清除对方的值
+
+```
+intent.setDataAndType(Uri.parse("file://abc"), "image/png");
+```
+data的下面两种写法作用是一样的：
+```
+<intent-filter>
+    <data android:scheme="file" android:host="www.github.com"/>
+</intent-filter>
+
+<intent-filter>
+    <data android:scheme="file"/>
+    <data android:host="www.github.com"/>
+</intent-filter>
+```
+
+#### 判断某一Intent是否存在
+1. PackageManager的`resolveActivity`方法或者Intent的`resolveActivity`方法：如果找不到就会返回null
+2. PackageManager的`queryIntentActivities`方法：它返回所有成功匹配的Activity信息 针对Service和BroadcastReceiver等组件，PackageManager同样提供了类似的方法去获取成功匹配的组件信息，例如`queryIntentServices`、`queryBroadcastReceivers`等方法
