@@ -4,15 +4,18 @@ import android.content.ComponentName;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.os.IBinder;
+import android.os.Message;
+import android.os.Messenger;
 import android.os.PersistableBundle;
+import android.os.RemoteException;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 
 public class SecondActivity extends AppCompatActivity {
     private static final String TAG = SecondActivity.class.getSimpleName();
-    private IRemoteService mIRemoteService;
-
+    Messenger mService = null;
+    private boolean mBound;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,16 +76,31 @@ public class SecondActivity extends AppCompatActivity {
     private ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            mIRemoteService = IRemoteService.Stub.asInterface(service);
+           // mIRemoteService = IRemoteService.Stub.asInterface(service);
+            mService = new Messenger(service);
+           mBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
             Log.d(TAG, "Service has unexpectedly disconnected");
-            mIRemoteService = null;
+            //mIRemoteService = null;
+            mService = null;
+            mBound = false;
         }
     };
 
+
+
+    private void sendMsg(){
+        if (!mBound) return;
+        Message message= Message.obtain(null, RemoteService.MSG_SAY_HELLO, 0, 0);
+        try {
+            mService.send(message);
+        } catch (RemoteException e) {
+            e.printStackTrace();
+        }
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {

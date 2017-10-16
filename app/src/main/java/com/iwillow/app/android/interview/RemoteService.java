@@ -23,6 +23,7 @@ public class RemoteService extends Service {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case MSG_SAY_HELLO:
+                    //msg.replyTo.send();
                     Toast.makeText(getApplicationContext(), "hello!", Toast.LENGTH_SHORT).show();
                     break;
                 default:
