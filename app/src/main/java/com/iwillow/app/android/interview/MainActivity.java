@@ -1,5 +1,6 @@
 package com.iwillow.app.android.interview;
 
+import android.app.IntentService;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -16,6 +17,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private TextView mTextView;
+    private IntentService mIntentService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
