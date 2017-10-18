@@ -274,7 +274,6 @@ public class ActivityMessenger extends Activity {
 >注：只有允许不同应用的客户端用 IPC 方式访问服务，并且想要在服务中处理多线程时，才有必要使用 AIDL。 如果您不需要执行跨越不同应用的并发 IPC，就应该通过实现一个 Binder 创建接口；或者，如果您想执行 IPC，但根本不需要处理多线程，则使用 Messenger 类来实现接口。无论如何，在实现 AIDL 之前，请您务必理解绑定服务。
 ### 定义AIDL接口
 
-### 定义AIDL接口
 
 ## 管理绑定服务的生命周期
 
