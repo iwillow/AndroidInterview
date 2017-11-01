@@ -4,6 +4,8 @@ import android.app.IntentService;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.PersistableBundle;
@@ -19,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mTextView;
     private IntentService mIntentService;
-    AsyncTask task;
+    BitmapFactory.Options options=new BitmapFactory.Options();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
