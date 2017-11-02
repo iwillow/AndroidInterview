@@ -62,7 +62,38 @@
 9. 采用多进程，将消耗内存的功能模块另外放置一个内存
 
 
+## 布局优化
 
+减少布局文件的层级，如果既可以使用LinearLayout又可以使用RelativeLayout,优先使用LinearLayout.
+1. 使用<include>标签使用已经有的布局。<include>标签只支持android:layout_开头的属性，android:id属性例外。
+2. <merge>标签一般和<include>配合使用，它可以减少布局中的层级,merge标签只能作为复用布局的root元素来使用。使用它来inflate一个布局时，必须指定一个ViewGroup实例作为其父元素并且设置attachToRoot属性为true（参考 inflate(int, android.view.ViewGroup, boolean) 方法的说明 ）。
+3. <ViewStub>继承自View，它非常轻量级，并且宽和高都是0，因此它本身不参与布局和绘制。ViewStub提供了按需加载功能，例如在网络异常情况下才显示的一些错误文件。这样就提高了程序性能。对于如下布局：
+
+```
+<ViewStub
+    android:id="@+id/stub_import"
+    android:inflatedId="@+id/panel_import"
+    android:layout="@layout/progress_overlay"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom" />
+```
+stub_import是ViewStub的id,而panel_import是layout/progress_overlay这个布局根元素的ID。要想按需加载，可采用下面两种方式进行:
+```
+((ViewStub) findViewById(R.id.stub_import)).setVisibility(View.VISIBLE);
+// or
+View importPanel = ((ViewStub) findViewById(R.id.stub_import)).inflate();
+```
+当调用inflate或者函数setVisibility加载后，ViewStub会被它内部的布局替换到，ViewStub被引用的资源替代，并且返回引用的view。 这样程序可以直接得到引用的view而不用再次调用函数findViewById()来查找了。ViewStub目前有个缺陷就是还不支持 <merge /> 标签。
+
+### ListView、GridView优化
+1. 不要在Adapter的getView方法中做耗时操作，利用ViewHolder设置View的Tag复用，减少findViewById()的调用次数。不要做逻辑太多的操作。
+2. 滑动的时候不要加载图片
+3. item的布局层级越少越好
+4. 将ListView的scrollingCache和animateCache设置为false
+5. 分页加载，每一次不要加载太多的数据
+6. 尽量开启硬件加速
+7. 元素避免半透明
 
 
 
