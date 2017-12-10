@@ -19,8 +19,12 @@ import android.view.View;
 import android.widget.TextView;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -28,8 +32,8 @@ public class MainActivity extends AppCompatActivity {
 
     private TextView mTextView;
     private IntentService mIntentService;
-    private Map<String, String> map = new HashMap<>();
-
+    private Map<String, String> map = new LinkedHashMap<>();
+    private Set<String> sHashSet=new TreeSet<>();
 
     private HttpResponseCache mHttpResponseCache;
 
@@ -53,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
         map.clear();
         showSize("onCreate");
         Log.d(TAG, "onCreate");
+        sHashSet.add("2323");
+        sHashSet.contains("");
     }
 
     @Override
